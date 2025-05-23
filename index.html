@@ -170,8 +170,12 @@
 
         // Перемещение препятствия наверх когда оно выходит за экран
         if (obstacle.y > canvas.height) {
-          obstacle.y = -obstacle.h;
-          obstacle.x = Math.random() * (canvas.width - obstacle.w);
+          const size = Math.floor(canvas.width * 0.1);
+          obstacle.y = -size;
+          obstacle.x = Math.random() * (canvas.width - size);
+          obstacle.w = size;
+          obstacle.h = size;
+          obstacle.speed = Math.max(3, Math.floor(canvas.width * 0.01));
         }
 
         // Проверка столкновения
