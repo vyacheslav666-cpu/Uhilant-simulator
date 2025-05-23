@@ -37,6 +37,11 @@
   </style>
 </head>
 <body>
+
+    <div id="score" style="position: absolute; top: 10px; left: 10px; font-size: 20px; color: white; z-index: 1000;">
+  Score: 0
+</div>
+
   <canvas id="game" width="400" height="600"></canvas>
   <div class="controls">
     <button class="btn" id="left">← Влево</button>
@@ -52,6 +57,16 @@
 
     let moveLeft = false;
     let moveRight = false;
+
+    let score = 0;
+    const scoreElement = document.getElementById("score");
+    // очки
+
+    function updateScore() {
+  score++;
+  scoreElement.textContent = "Score: " + score;
+}
+// функция обновления очков
 
     // Управление кнопками
     const leftBtn = document.getElementById('left');
@@ -79,6 +94,7 @@
       // Движение препятствия
       obstacle.y += obstacle.speed;
       if (obstacle.y > canvas.height) {
+        updateScore();
         obstacle.y = 0;
         obstacle.x = Math.random() * (canvas.width - obstacle.w);
       }
@@ -90,10 +106,13 @@
         player.y < obstacle.y + obstacle.h &&
         player.y + player.h > obstacle.y
       ) {
+        score = 0;
+        scoreElement.textContent = "Score: 0";
         alert("GAME OVER!");
         document.location.reload();
       }
     }
+
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
