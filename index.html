@@ -9,6 +9,7 @@
       background: #000;
       font-family: sans-serif;
       text-align: center;
+      overflow: hidden;
     }
 
     canvas {
@@ -18,40 +19,70 @@
     }
 
     .controls {
-      margin-top: 10px;
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1001;
+      display: flex;
+      gap: 20px;
     }
 
     .btn {
-      font-size: 24px;
-      padding: 15px 30px;
-      margin: 10px;
+      font-size: 28px;
+      padding: 20px 35px;
       background: #444;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 15px;
       user-select: none;
       -webkit-user-select: none;
       -ms-user-select: none;
       outline: none;
+      cursor: pointer;
+      min-width: 100px;
+      min-height: 70px;
+      flex-shrink: 0;
     }
 
     .btn:active {
       background: #666;
     }
+
+    #score {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      color: white;
+      z-index: 1000;
+    }
+
+    #gameover {
+      display: none;
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      background: rgba(0,0,0,0.8);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
 
-  <div id="score" style="position: absolute; top: 10px; left: 10px; font-size: 20px; color: white; z-index: 1000;">
-    Score: 0
-  </div>
+  <div id="score">Score: 0</div>
 
-  <canvas id="game" width="400" height="600"></canvas>
+  <canvas id="game"></canvas>
 
-  <div id="gameover" style="display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-    color: white; font-size: 24px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; text-align: center; z-index: 1000;">
+  <div id="gameover">
     <p id="finalScore">Вы набрали 0 очков</p>
-    <button onclick="restartGame()" style="font-size: 20px; padding: 10px 20px;">Заново</button>
+    <button onclick="restartGame()" style="font-size: 20px; padding: 10px 20px; cursor: pointer;">Заново</button>
   </div>
 
   <div class="controls">
@@ -63,50 +94,83 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
 
-    const player = { x: 180, y: 550, w: 40, h: 40, speed: 5 };
-    let obstacles = [
-      { x: Math.random() * 360, y: 0, w: 40, h: 40, speed: 4 }
-    ];
-
+    let player = {};
+    let obstacles = [];
     let moveLeft = false;
     let moveRight = false;
-
     let score = 0;
     let isGameOver = false;
     let gameSpeed = 1;
+    let scoreInterval;
+    let spawnInterval;
 
     const scoreElement = document.getElementById("score");
-
     const leftBtn = document.getElementById('left');
     const rightBtn = document.getElementById('right');
 
-leftBtn.addEventListener('touchstart', e => { e.preventDefault(); moveLeft = true; });
-leftBtn.addEventListener('touchend', e => { e.preventDefault(); moveLeft = false; });
-leftBtn.addEventListener('mousedown', e => { e.preventDefault(); moveLeft = true; });
-leftBtn.addEventListener('mouseup', e => { e.preventDefault(); moveLeft = false; });
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initializeGame();
+    }
 
-rightBtn.addEventListener('touchstart', e => { e.preventDefault(); moveRight = true; });
-rightBtn.addEventListener('touchend', e => { e.preventDefault(); moveRight = false; });
-rightBtn.addEventListener('mousedown', e => { e.preventDefault(); moveRight = true; });
-rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = false; });
+    function initializeGame() {
+      // Инициализируем игрока
+      player = { 
+        x: canvas.width / 2 - 25, 
+        y: canvas.height - 200, 
+        w: 50, 
+        h: 50, 
+        speed: 6 
+      };
 
+      // Инициализируем препятствия
+      obstacles = [
+        { x: Math.random() * (canvas.width - 50), y: 0, w: 50, h: 50, speed: 4 }
+      ];
+    }
 
+    // Обработчики событий для кнопок
+    leftBtn.addEventListener('touchstart', e => { e.preventDefault(); moveLeft = true; });
+    leftBtn.addEventListener('touchend', e => { e.preventDefault(); moveLeft = false; });
+    leftBtn.addEventListener('mousedown', e => { e.preventDefault(); moveLeft = true; });
+    leftBtn.addEventListener('mouseup', e => { e.preventDefault(); moveLeft = false; });
+
+    rightBtn.addEventListener('touchstart', e => { e.preventDefault(); moveRight = true; });
+    rightBtn.addEventListener('touchend', e => { e.preventDefault(); moveRight = false; });
+    rightBtn.addEventListener('mousedown', e => { e.preventDefault(); moveRight = true; });
+    rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = false; });
+
+    // Обработка клавиатуры
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveLeft = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveRight = true;
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveLeft = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveRight = false;
+    });
 
     function update() {
       if (isGameOver) return;
 
+      // Движение игрока
       if (moveLeft) player.x -= player.speed;
       if (moveRight) player.x += player.speed;
       player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
 
+      // Обновление препятствий
       obstacles.forEach(obstacle => {
         obstacle.y += obstacle.speed * gameSpeed;
 
+        // Перемещение препятствия наверх когда оно выходит за экран
         if (obstacle.y > canvas.height) {
-          obstacle.y = -40;
+          obstacle.y = -50;
           obstacle.x = Math.random() * (canvas.width - obstacle.w);
         }
 
+        // Проверка столкновения
         if (
           player.x < obstacle.x + obstacle.w &&
           player.x + player.w > obstacle.x &&
@@ -121,9 +185,11 @@ rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = fals
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Рисуем игрока
       ctx.fillStyle = 'lime';
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
+      // Рисуем препятствия
       ctx.fillStyle = 'red';
       obstacles.forEach(obstacle => {
         ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
@@ -136,27 +202,31 @@ rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = fals
       if (!isGameOver) requestAnimationFrame(gameLoop);
     }
 
-    const scoreInterval = setInterval(() => {
-      if (!isGameOver) {
-        score++;
-        scoreElement.textContent = "Score: " + score;
-        if (score % 10 === 0) {
-          gameSpeed += 0.1;
+    function startIntervals() {
+      // Увеличение счета
+      scoreInterval = setInterval(() => {
+        if (!isGameOver) {
+          score++;
+          scoreElement.textContent = "Score: " + score;
+          if (score % 10 === 0) {
+            gameSpeed += 0.1;
+          }
         }
-      }
-    }, 500);
+      }, 500);
 
-    const spawnInterval = setInterval(() => {
-      if (!isGameOver && obstacles.length < 5) {
-        obstacles.push({
-          x: Math.random() * (canvas.width - 40),
-          y: -40,
-          w: 40,
-          h: 40,
-          speed: 4
-        });
-      }
-    }, 5000);
+      // Спавн новых препятствий
+      spawnInterval = setInterval(() => {
+        if (!isGameOver && obstacles.length < 5) {
+          obstacles.push({
+            x: Math.random() * (canvas.width - 50),
+            y: -50,
+            w: 50,
+            h: 50,
+            speed: 4
+          });
+        }
+      }, 3000);
+    }
 
     function gameOver() {
       isGameOver = true;
@@ -170,8 +240,11 @@ rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = fals
       location.reload();
     }
 
+    // Инициализация игры
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    startIntervals();
     gameLoop();
   </script>
 </body>
 </html>
-
