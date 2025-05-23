@@ -21,11 +21,12 @@
     .controls {
       position: fixed;
       bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 100%;
       z-index: 1001;
       display: flex;
-      gap: 20px;
+      justify-content: space-between;
+      padding: 0 20px;
+      box-sizing: border-box;
     }
 
     .btn {
@@ -115,18 +116,21 @@
     }
 
     function initializeGame() {
+      // Адаптивные размеры - 10% от ширины экрана
+      const size = Math.floor(canvas.width * 0.1);
+      
       // Инициализируем игрока
       player = { 
-        x: canvas.width / 2 - 25, 
-        y: canvas.height - 200, 
-        w: 50, 
-        h: 50, 
-        speed: 6 
+        x: canvas.width / 2 - size / 2, 
+        y: canvas.height - 300, 
+        w: size, 
+        h: size, 
+        speed: Math.max(4, Math.floor(canvas.width * 0.015)) // Скорость тоже адаптивная
       };
 
       // Инициализируем препятствия
       obstacles = [
-        { x: Math.random() * (canvas.width - 50), y: 0, w: 50, h: 50, speed: 4 }
+        { x: Math.random() * (canvas.width - size), y: 0, w: size, h: size, speed: Math.max(3, Math.floor(canvas.width * 0.01)) }
       ];
     }
 
@@ -166,7 +170,7 @@
 
         // Перемещение препятствия наверх когда оно выходит за экран
         if (obstacle.y > canvas.height) {
-          obstacle.y = -50;
+          obstacle.y = -obstacle.h;
           obstacle.x = Math.random() * (canvas.width - obstacle.w);
         }
 
