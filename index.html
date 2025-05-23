@@ -79,33 +79,36 @@
     leftBtn.addEventListener('mouseleave', () => moveLeft = false);
 
     rightBtn.addEventListener('touchstart', () => moveRight = true);
+    let gameSpeed = 1; // множитель скорости
     rightBtn.addEventListener('touchend', () => moveRight = false);
     rightBtn.addEventListener('mousedown', () => moveRight = true);
     rightBtn.addEventListener('mouseup', () => moveRight = false);
     rightBtn.addEventListener('mouseleave', () => moveRight = false);
 
-    function update() {
-      if (isGameOver) return;
 
-      if (moveLeft) player.x -= player.speed;
-      if (moveRight) player.x += player.speed;
-      player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
 
-      obstacle.y += obstacle.speed;
-      if (obstacle.y > canvas.height) {
-        obstacle.y = 0;
-        obstacle.x = Math.random() * (canvas.width - obstacle.w);
-      }
+function update() {
+  if (isGameOver) return;
 
-      if (
-        player.x < obstacle.x + obstacle.w &&
-        player.x + player.w > obstacle.x &&
-        player.y < obstacle.y + obstacle.h &&
-        player.y + player.h > obstacle.y
-      ) {
-        gameOver();
-      }
-    }
+  if (moveLeft) player.x -= player.speed;
+  if (moveRight) player.x += player.speed;
+  player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
+
+  obstacle.y += obstacle.speed * gameSpeed;
+  if (obstacle.y > canvas.height) {
+    obstacle.y = 0;
+    obstacle.x = Math.random() * (canvas.width - obstacle.w);
+  }
+
+  if (
+    player.x < obstacle.x + obstacle.w &&
+    player.x + player.w > obstacle.x &&
+    player.y < obstacle.y + obstacle.h &&
+    player.y + player.h > obstacle.y
+  ) {
+    gameOver();
+  }
+}
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -123,12 +126,21 @@
       if (!isGameOver) requestAnimationFrame(gameLoop);
     }
 
-    const scoreInterval = setInterval(() => {
-      if (!isGameOver) {
-        score++;
-        scoreElement.textContent = "Score: " + score;
-      }
-    }, 500);
+
+
+// каждые 0.5 секунды: +1 очко
+const scoreInterval = setInterval(() => {
+  if (!isGameOver) {
+    score++;
+    scoreElement.textContent = "Score: " + score;
+
+    // Каждые 10 очков увеличиваем скорость
+    if (score % 10 === 0) {
+      gameSpeed += 0.1;
+    }
+  }
+}, 500);
+
 
     function gameOver() {
       isGameOver = true;
