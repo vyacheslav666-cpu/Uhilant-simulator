@@ -38,11 +38,18 @@
 </head>
 <body>
 
-    <div id="score" style="position: absolute; top: 10px; left: 10px; font-size: 20px; color: white; z-index: 1000;">
-  Score: 0
-</div>
+  <div id="score" style="position: absolute; top: 10px; left: 10px; font-size: 20px; color: white; z-index: 1000;">
+    Score: 0
+  </div>
 
   <canvas id="game" width="400" height="600"></canvas>
+
+  <div id="gameover" style="display: none; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    color: white; font-size: 24px; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; text-align: center; z-index: 1000;">
+    <p id="finalScore">Вы набрали 0 очков</p>
+    <button onclick="restartGame()" style="font-size: 20px; padding: 10px 20px;">Заново</button>
+  </div>
+
   <div class="controls">
     <button class="btn" id="left">← Влево</button>
     <button class="btn" id="right">Вправо →</button>
@@ -60,15 +67,8 @@
 
     let score = 0;
     const scoreElement = document.getElementById("score");
-    // очки
+    let isGameOver = false;
 
-    function updateScore() {
-  score++;
-  scoreElement.textContent = "Score: " + score;
-}
-// функция обновления очков
-
-    // Управление кнопками
     const leftBtn = document.getElementById('left');
     const rightBtn = document.getElementById('right');
 
@@ -85,42 +85,34 @@
     rightBtn.addEventListener('mouseleave', () => moveRight = false);
 
     function update() {
+      if (isGameOver) return;
+
       if (moveLeft) player.x -= player.speed;
       if (moveRight) player.x += player.speed;
-
-      // Ограничение по краям
       player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
 
-      // Движение препятствия
       obstacle.y += obstacle.speed;
       if (obstacle.y > canvas.height) {
         obstacle.y = 0;
         obstacle.x = Math.random() * (canvas.width - obstacle.w);
       }
 
-      // Проверка столкновения
       if (
         player.x < obstacle.x + obstacle.w &&
         player.x + player.w > obstacle.x &&
         player.y < obstacle.y + obstacle.h &&
         player.y + player.h > obstacle.y
       ) {
-        score = 0;
-        scoreElement.textContent = "Score: 0";
-        alert("GAME OVER!");
-        document.location.reload();
+        gameOver();
       }
     }
-
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Игрок
       ctx.fillStyle = 'lime';
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
-      // Препятствие
       ctx.fillStyle = 'red';
       ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
     }
@@ -128,14 +120,26 @@
     function gameLoop() {
       update();
       draw();
-      requestAnimationFrame(gameLoop);
+      if (!isGameOver) requestAnimationFrame(gameLoop);
     }
 
-    setInterval(() => {
-  score++;
-  scoreElement.textContent = "Score: " + score;
-}, 1000); // каждую секунду
+    const scoreInterval = setInterval(() => {
+      if (!isGameOver) {
+        score++;
+        scoreElement.textContent = "Score: " + score;
+      }
+    }, 500);
 
+    function gameOver() {
+      isGameOver = true;
+      clearInterval(scoreInterval);
+      document.getElementById("finalScore").textContent = "Вы набрали " + score + " очков";
+      document.getElementById("gameover").style.display = "block";
+    }
+
+    function restartGame() {
+      location.reload();
+    }
 
     gameLoop();
   </script>
