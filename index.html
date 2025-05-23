@@ -94,7 +94,6 @@
       // Движение препятствия
       obstacle.y += obstacle.speed;
       if (obstacle.y > canvas.height) {
-        updateScore();
         obstacle.y = 0;
         obstacle.x = Math.random() * (canvas.width - obstacle.w);
       }
@@ -131,6 +130,12 @@
       draw();
       requestAnimationFrame(gameLoop);
     }
+
+    setInterval(() => {
+  score++;
+  scoreElement.textContent = "Score: " + score;
+}, 1000); // каждую секунду
+
 
     gameLoop();
   </script>
