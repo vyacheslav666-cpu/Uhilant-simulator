@@ -29,6 +29,10 @@
       color: white;
       border: none;
       border-radius: 10px;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      outline: none;
     }
 
     .btn:active {
@@ -76,17 +80,17 @@
     const leftBtn = document.getElementById('left');
     const rightBtn = document.getElementById('right');
 
-    leftBtn.addEventListener('touchstart', () => moveLeft = true);
-    leftBtn.addEventListener('touchend', () => moveLeft = false);
-    leftBtn.addEventListener('mousedown', () => moveLeft = true);
-    leftBtn.addEventListener('mouseup', () => moveLeft = false);
-    leftBtn.addEventListener('mouseleave', () => moveLeft = false);
+leftBtn.addEventListener('touchstart', e => { e.preventDefault(); moveLeft = true; });
+leftBtn.addEventListener('touchend', e => { e.preventDefault(); moveLeft = false; });
+leftBtn.addEventListener('mousedown', e => { e.preventDefault(); moveLeft = true; });
+leftBtn.addEventListener('mouseup', e => { e.preventDefault(); moveLeft = false; });
 
-    rightBtn.addEventListener('touchstart', () => moveRight = true);
-    rightBtn.addEventListener('touchend', () => moveRight = false);
-    rightBtn.addEventListener('mousedown', () => moveRight = true);
-    rightBtn.addEventListener('mouseup', () => moveRight = false);
-    rightBtn.addEventListener('mouseleave', () => moveRight = false);
+rightBtn.addEventListener('touchstart', e => { e.preventDefault(); moveRight = true; });
+rightBtn.addEventListener('touchend', e => { e.preventDefault(); moveRight = false; });
+rightBtn.addEventListener('mousedown', e => { e.preventDefault(); moveRight = true; });
+rightBtn.addEventListener('mouseup', e => { e.preventDefault(); moveRight = false; });
+
+
 
     function update() {
       if (isGameOver) return;
