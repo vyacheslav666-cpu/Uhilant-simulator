@@ -60,14 +60,18 @@
     const ctx = canvas.getContext('2d');
 
     const player = { x: 180, y: 550, w: 40, h: 40, speed: 5 };
-    let obstacle = { x: Math.random() * 360, y: 0, w: 40, h: 40, speed: 4 };
+    let obstacles = [
+      { x: Math.random() * 360, y: 0, w: 40, h: 40, speed: 4 }
+    ];
 
     let moveLeft = false;
     let moveRight = false;
 
     let score = 0;
-    const scoreElement = document.getElementById("score");
     let isGameOver = false;
+    let gameSpeed = 1;
+
+    const scoreElement = document.getElementById("score");
 
     const leftBtn = document.getElementById('left');
     const rightBtn = document.getElementById('right');
@@ -79,36 +83,36 @@
     leftBtn.addEventListener('mouseleave', () => moveLeft = false);
 
     rightBtn.addEventListener('touchstart', () => moveRight = true);
-    let gameSpeed = 1; // множитель скорости
     rightBtn.addEventListener('touchend', () => moveRight = false);
     rightBtn.addEventListener('mousedown', () => moveRight = true);
     rightBtn.addEventListener('mouseup', () => moveRight = false);
     rightBtn.addEventListener('mouseleave', () => moveRight = false);
 
+    function update() {
+      if (isGameOver) return;
 
+      if (moveLeft) player.x -= player.speed;
+      if (moveRight) player.x += player.speed;
+      player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
 
-function update() {
-  if (isGameOver) return;
+      obstacles.forEach(obstacle => {
+        obstacle.y += obstacle.speed * gameSpeed;
 
-  if (moveLeft) player.x -= player.speed;
-  if (moveRight) player.x += player.speed;
-  player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
+        if (obstacle.y > canvas.height) {
+          obstacle.y = -40;
+          obstacle.x = Math.random() * (canvas.width - obstacle.w);
+        }
 
-  obstacle.y += obstacle.speed * gameSpeed;
-  if (obstacle.y > canvas.height) {
-    obstacle.y = 0;
-    obstacle.x = Math.random() * (canvas.width - obstacle.w);
-  }
-
-  if (
-    player.x < obstacle.x + obstacle.w &&
-    player.x + player.w > obstacle.x &&
-    player.y < obstacle.y + obstacle.h &&
-    player.y + player.h > obstacle.y
-  ) {
-    gameOver();
-  }
-}
+        if (
+          player.x < obstacle.x + obstacle.w &&
+          player.x + player.w > obstacle.x &&
+          player.y < obstacle.y + obstacle.h &&
+          player.y + player.h > obstacle.y
+        ) {
+          gameOver();
+        }
+      });
+    }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -117,7 +121,9 @@ function update() {
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
       ctx.fillStyle = 'red';
-      ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+      obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+      });
     }
 
     function gameLoop() {
@@ -126,25 +132,32 @@ function update() {
       if (!isGameOver) requestAnimationFrame(gameLoop);
     }
 
+    const scoreInterval = setInterval(() => {
+      if (!isGameOver) {
+        score++;
+        scoreElement.textContent = "Score: " + score;
+        if (score % 10 === 0) {
+          gameSpeed += 0.1;
+        }
+      }
+    }, 500);
 
-
-// каждые 0.5 секунды: +1 очко
-const scoreInterval = setInterval(() => {
-  if (!isGameOver) {
-    score++;
-    scoreElement.textContent = "Score: " + score;
-
-    // Каждые 10 очков увеличиваем скорость
-    if (score % 10 === 0) {
-      gameSpeed += 0.1;
-    }
-  }
-}, 500);
-
+    const spawnInterval = setInterval(() => {
+      if (!isGameOver && obstacles.length < 5) {
+        obstacles.push({
+          x: Math.random() * (canvas.width - 40),
+          y: -40,
+          w: 40,
+          h: 40,
+          speed: 4
+        });
+      }
+    }, 5000);
 
     function gameOver() {
       isGameOver = true;
       clearInterval(scoreInterval);
+      clearInterval(spawnInterval);
       document.getElementById("finalScore").textContent = "Вы набрали " + score + " очков";
       document.getElementById("gameover").style.display = "block";
     }
