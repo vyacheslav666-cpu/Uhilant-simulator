@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Доджер</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: #111;
+    }
+
+    .controls {
+      margin-top: 10px;
+    }
+
+    .btn {
+      font-size: 24px;
+      padding: 15px 30px;
+      margin: 10px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
+    .btn:active {
+      background: #666;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="400" height="600"></canvas>
+  <div class="controls">
+    <button class="btn" id="left">← Влево</button>
+    <button class="btn" id="right">Вправо →</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    const player = { x: 180, y: 550, w: 40, h: 40, speed: 5 };
+    let obstacle = { x: Math.random() * 360, y: 0, w: 40, h: 40, speed: 4 };
+
+    let moveLeft = false;
+    let moveRight = false;
+
+    // Управление кнопками
+    const leftBtn = document.getElementById('left');
+    const rightBtn = document.getElementById('right');
+
+    leftBtn.addEventListener('touchstart', () => moveLeft = true);
+    leftBtn.addEventListener('touchend', () => moveLeft = false);
+    leftBtn.addEventListener('mousedown', () => moveLeft = true);
+    leftBtn.addEventListener('mouseup', () => moveLeft = false);
+    leftBtn.addEventListener('mouseleave', () => moveLeft = false);
+
+    rightBtn.addEventListener('touchstart', () => moveRight = true);
+    rightBtn.addEventListener('touchend', () => moveRight = false);
+    rightBtn.addEventListener('mousedown', () => moveRight = true);
+    rightBtn.addEventListener('mouseup', () => moveRight = false);
+    rightBtn.addEventListener('mouseleave', () => moveRight = false);
+
+    function update() {
+      if (moveLeft) player.x -= player.speed;
+      if (moveRight) player.x += player.speed;
+
+      // Ограничение по краям
+      player.x = Math.max(0, Math.min(player.x, canvas.width - player.w));
+
+      // Движение препятствия
+      obstacle.y += obstacle.speed;
+      if (obstacle.y > canvas.height) {
+        obstacle.y = 0;
+        obstacle.x = Math.random() * (canvas.width - obstacle.w);
+      }
+
+      // Проверка столкновения
+      if (
+        player.x < obstacle.x + obstacle.w &&
+        player.x + player.w > obstacle.x &&
+        player.y < obstacle.y + obstacle.h &&
+        player.y + player.h > obstacle.y
+      ) {
+        alert("GAME OVER!");
+        document.location.reload();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Игрок
+      ctx.fillStyle = 'lime';
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // Препятствие
+      ctx.fillStyle = 'red';
+      ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
+
